@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<title>CHBTC API JAVASCRIPT DEMO</title>
+		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript" src="sha1.js"></script>
+		<script type="text/javascript" src="md5.js"></script>
+		<script type="text/javascript">
+			var accessKey = "自己的公钥";
+			var screctKey = "自己的私钥";
+			var apiDomain = "wss://api.chbtc.com:9999/websocket";
+			
+			var socket;
+			if (!window.WebSocket) {
+				window.WebSocket = window.MozWebSocket;
+			}
+			if (window.WebSocket) {
+				socket = new WebSocket(apiDomain);
+				socket.onmessage = function(event) {
+					var ta = document.getElementById('responseText');
+					ta.value = ta.value + '\n' + event.data
+				};
+				socket.onopen = function(event) {
+					var ta = document.getElementById('responseText');
+					ta.value = "Web Socket opened!";
+					//var message = '{"event":"addChannel","channel":"btc_cny_ticker"}';
+					//send(message);
+				};
+				socket.onclose = function(event) {
+					var ta = document.getElementById('responseText');
+					ta.value = ta.value + "Web Socket closed";
+				};
+				
+			} else {
+				alert("Your browser does not support Web Socket.");
+			}
+
+			function send(message) {
+				if (!window.WebSocket) {
+					return;
+				}
+				if (socket.readyState == WebSocket.OPEN) {
+					socket.send(message);
+				} else {
+					alert("The socket is not open.");
+				}
+			}
+			
+			function openTicker(){
+				var message = '{"event":"addChannel","channel":"btc_cny_ticker"}';
+				send(message);
+			}
+			
+			function closeTicker(){
+				var message = '{"event":"removeChannel","channel":"btc_cny_ticker"}';
+				send(message);
+			}
+			
+			function getaccountinfo(){
+				var shaScrectKey = hex_sha1(screctKey);	//sha加密私钥
+				var data = {
+					"accesskey" : accessKey,
+					"channel" : "getaccountinfo",
+					"event" : "addChannel"
+				}
+				var info = JSON.stringify(data);	//签名明文
+				var ta = document.getElementById('responseText');
+				ta.value = ta.value + "\n明文="+info+"\n";
+				var signatrue = hex_hmac_md5(shaScrectKey, info);	//生成签名
+				data.sign = signatrue;
+				info = JSON.stringify(data);
+				send( info );
+			}
+		</script>
+	</head>
+	<body>
+		<textarea id="responseText" style="width: 1000px; height: 300px;"></textarea><br/>
+		<input type="button" value="开启BTC获取行情" onclick="javascript:openTicker();"/><br/>
+		<input type="button" value="关闭BTC获取行情" onclick="javascript:closeTicker();"/><br/>
+		<input type="button" value="查询余额" onclick="javascript:getaccountinfo();"/><br/>
+	</body>
+</html>
