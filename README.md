@@ -1,6 +1,6 @@
-## WebSocket API 代码示例
+## API 代码示例
 
-### WebSocket api代码示例包括：
+### api代码示例包括：
 
 - C#
 - JAVA
